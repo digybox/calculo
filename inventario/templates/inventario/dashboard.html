@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Control - Mermas</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #FDF9F1; margin: 0; padding: 20px; color: #333; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(226, 74, 42, 0.05); margin-bottom: 20px; border: 1px solid #f0e6d2; }
+        .header h2 { color: #E24A2A; margin: 0; }
+        .header a { text-decoration: none; color: white; background: #2C3E50; padding: 10px 20px; border-radius: 20px; font-weight: bold; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); border: 1px solid #f0e6d2; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 15px; }
+        th, td { border-bottom: 1px solid #eee; padding: 15px 10px; text-align: center; }
+        th { background-color: #FDF9F1; color: #E24A2A; font-weight: bold; text-transform: uppercase; font-size: 13px; }
+        .alerta-roja { background-color: #E24A2A; color: white; font-weight: bold; border-radius: 20px; padding: 6px 12px; display: inline-block; font-size: 12px; }
+        .alerta-verde { background-color: #27ae60; color: white; font-weight: bold; border-radius: 20px; padding: 6px 12px; display: inline-block; font-size: 12px;}
+        .input-form { display: flex; justify-content: center; gap: 5px; }
+        .input-stock { width: 60px; padding: 8px; border: 1px solid #ddd; border-radius: 5px; text-align: center; }
+        .btn-update { background: #2C3E50; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 5px; font-weight: bold;}
+        .btn-update:hover { background: #1a252f; }
+        .graphs { margin-top: 40px; padding-top: 20px; border-top: 2px dashed #eee; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>📊 Gestión de Inventario y Mermas</h2>
+        <a href="/">← Volver a la Tienda</a>
+    </div>
+
+    <div class="container">
+        <h3 style="color: #2C3E50; margin-top: 0;">Reporte de Trazabilidad Matemática</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Stock Inicial</th>
+                    <th>Ventas (Δ)</th>
+                    <th>Stock Teórico</th>
+                    <th>Conteo Físico (Real)</th>
+                    <th>Derivada (ΔI)</th>
+                    <th>Límite (L)</th>
+                    <th>Impacto $</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in reporte %}
+                <tr>
+                    <td style="text-align: left;"><strong>{{ item.ingrediente }}</strong></td>
+                    <td>{{ item.stock_inicial }}</td>
+                    <td style="color: #E24A2A; font-weight: bold;">-{{ item.ventas }}</td>
+                    <td style="font-weight: bold; color: #2980b9;">{{ item.stock_teorico }}</td>
+                    <td>
+                        <form class="input-form" method="POST" action="">
+                            {% csrf_token %}
+                            <input type="hidden" name="item_id" value="{{ item.id }}">
+                            <input type="number" name="nuevo_stock" class="input-stock" value="{{ item.stock_real }}" required>
+                            <button type="submit" class="btn-update">✓</button>
+                        </form>
+                    </td>
+                    <td style="font-weight: bold;">{{ item.delta_i }}</td>
+                    <td>±{{ item.limite_L }}</td>
+                    <td style="color: #c0392b; font-weight: bold;">${{ item.impacto }}</td>
+                    <td><span class="{% if item.alerta %}alerta-roja{% else %}alerta-verde{% endif %}">{{ item.estado }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="graphs">
+            <canvas id="graficoInventario" height="80"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const nombres = {{ nombres|safe }};
+        const teoricos = {{ teoricos|safe }};
+        const reales = {{ reales|safe }};
+        const ctx = document.getElementById('graficoInventario').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: nombres,
+                datasets: [
+                    { label: 'Stock Teórico (Calculado)', data: teoricos, backgroundColor: 'rgba(44, 62, 80, 0.8)' },
+                    { label: 'Stock Real (Conteo Físico)', data: reales, backgroundColor: 'rgba(226, 74, 42, 0.8)' }
+                ]
+            },
+            options: { responsive: true, plugins: { title: { display: true, text: 'Stock Teórico vs. Stock Real', font: {size: 16} } } }
+        });
+    </script>
+</body>
+</html>

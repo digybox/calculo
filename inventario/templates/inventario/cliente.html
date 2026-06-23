@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Tanta - Pedidos en Línea</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #FDF9F1; margin: 0; color: #333; }
+        header { background-color: #E24A2A; color: white; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .logo { font-size: 28px; font-weight: bold; letter-spacing: 2px; text-decoration: none; color: white; }
+        .nav-links a { color: white; text-decoration: none; font-weight: bold; margin-left: 20px; padding: 8px 15px; border-radius: 20px; transition: background 0.3s; }
+        .nav-links a:hover { background: rgba(255,255,255,0.2); }
+        .btn-outline { border: 2px solid white; }
+        .hero { text-align: center; padding: 60px 20px; background: linear-gradient(rgba(226, 74, 42, 0.1), rgba(253, 249, 241, 1)); }
+        .hero h1 { font-size: 40px; color: #E24A2A; margin-bottom: 10px; }
+        .hero p { font-size: 18px; color: #666; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; padding: 40px; max-width: 1200px; margin: 0 auto; }
+        .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 15px rgba(0,0,0,0.05); transition: transform 0.3s; border: 1px solid #f0e6d2; }
+        .card:hover { transform: translateY(-8px); box-shadow: 0 12px 20px rgba(226, 74, 42, 0.15); }
+        .card img { width: 100%; height: 220px; object-fit: cover; }
+        .card-body { padding: 20px; text-align: center; }
+        .card-body h3 { color: #2C3E50; margin: 0 0 10px 0; font-size: 22px; }
+        .price { color: #E24A2A; font-weight: bold; font-size: 20px; margin-bottom: 15px; }
+        .btn { background-color: #E24A2A; color: white; border: none; padding: 12px 20px; border-radius: 25px; cursor: pointer; font-size: 16px; width: 100%; font-weight: bold; transition: background 0.3s; }
+        .btn:hover { background-color: #C0392B; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/" class="logo">TANTA</a>
+        <div class="nav-links">
+            {% if user.is_authenticated %}
+                <span>Hola, {{ user.username }}!</span>
+                {% if user.is_staff %}
+                    <a href="{% url 'dashboard' %}" style="background: #2C3E50;">Panel Admin</a>
+                {% endif %}
+                <a href="{% url 'logout' %}">Cerrar Sesión</a>
+            {% else %}
+                <a href="{% url 'login' %}">Iniciar Sesión</a>
+                <a href="{% url 'registro' %}" class="btn-outline">Crear Cuenta</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <div class="hero">
+        <h1>Nuestros Clásicos Peruanos</h1>
+        <p>Tradición y sabor directo a tu mesa.</p>
+    </div>
+
+    <div class="grid">
+        {% for id, item in menu %}
+        <div class="card">
+            <img src="{{ item.imagen }}" alt="{{ item.ingrediente }}">
+            <div class="card-body">
+                <h3>{{ item.ingrediente }}</h3>
+                <div class="price">${{ item.costo_unitario }}</div>
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    <input type="hidden" name="item_id" value="{{ id }}">
+                    <button type="submit" class="btn">Agregar al Pedido</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
